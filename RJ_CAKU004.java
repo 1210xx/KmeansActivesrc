@@ -4,6 +4,9 @@ import java.io.FileReader;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.util.*;
+
+import org.junit.validator.PublicClassValidator;
+
 import weka.core.*;
 
 public class RJ_CAKU004 {
@@ -40,12 +43,23 @@ public class RJ_CAKU004 {
 
 	/**
 	 * the distance index 
-	 * 0 
-	 * 1
-	 * 2 
 	 */
-	static int DISTANCEMEASURE;
-	
+	int distanceMeasure;
+
+	/**
+	 * Manhattan distance.
+	 */
+	public static final int MANHATTAN = 0;
+
+	/**
+	 * Euclidean distance.
+	 */
+	public static final int EUCLIDEAN = 1;
+
+	/**
+	 * 
+	 */
+	public static final int DISTANCE = 1;
 	/**
 	 **************************************
 	 * The constructor.read the file and initialize the cost value
@@ -68,7 +82,7 @@ public class RJ_CAKU004 {
 			System.out.println("Cannot read the file: " + paraFilename + "\r\n" + ee);
 			System.exit(0);
 		} // Of try
-		
+
 		// Initialize
 		mCost = paraMisclassificationCost;
 		tCost = paraTeachCost;
@@ -102,15 +116,16 @@ public class RJ_CAKU004 {
 		// int[] tempCneterIndex = { 0, 20 };
 		// System.out.println(Arrays.deepToString(caku.indexToInstance(tempCneterIndex)));
 		// caku.cluster(caku.prelearn(), caku.indexToInstance(tempCneterIndex));
-		caku.querySplitClassify(caku.prelearn(), 0);
+		int[] CAKUArray = caku.prelearn();
+		caku.querySplitClassify(CAKUArray, CAKUArray[0]);
 		tempCost += caku.totalCost();
-		
+
 		//Detection the final result
 		for (int i = 0; i < caku.prelearn().length; i++) {
 			if (caku.instanceStatus[i] == 0) {
-				System.out.println("The #" + i + "insntace untreat");
-			}//of if
-		}//of for i
+				System.out.println("Warning!!!!  \rThe #" + i + "insntace untreat");
+			} //of if
+		} //of for i
 
 		System.out.println("(main) The instance state is :  " + intArrayToString(caku.instanceStatus));
 		System.out.println("(main) The label is :  " + intArrayToString(caku.labels));
@@ -118,6 +133,7 @@ public class RJ_CAKU004 {
 		System.out.println("(main) Done....");
 		System.out.println("(main) Read the data: " + dataTrace);
 		System.out.println("(main) The data has " + caku.data.numInstances() + " instances");
+		
 	}// of main
 
 	/**
@@ -128,15 +144,11 @@ public class RJ_CAKU004 {
 	 ************************************
 	 */
 	public int[] prelearn() {
-		
+
 		int[] originalBlock = new int[data.numInstances()];
 		for (int i = 0; i < originalBlock.length; i++) {
 			originalBlock[i] = i;
 		} // Of for i
-
-		// System.out.println("(prelearn)instanceStatus: " +
-		// Arrays.toString(instanceStatus));
-		// System.out.println("(prelearn)labels: " + Arrays.toString(labels));
 		return originalBlock;
 
 	}// Of learningTest
@@ -152,10 +164,8 @@ public class RJ_CAKU004 {
 	public void querySplitClassify(int[] paraBlock, int paraInitialPoint) {
 		int tempFirstLabel = -1;
 		int tempFirstPoint = -1;
-		System.out.println("(querySplitClassify) The instancestate of block is :" + intArrayToString(instanceStatus));
-		System.out.println("(querySplitClassify) 1.The labels of block is :" + intArrayToString(labels));
 		System.out.println("+++++++++++(querySplitClassify) The input block is :" + intArrayToString(paraBlock));
-		
+
 		//If block length < 5 buy it directly
 		if (paraBlock.length <= 5) {
 			for (int i = 0; i < paraBlock.length; i++) {
@@ -163,37 +173,34 @@ public class RJ_CAKU004 {
 				labels[paraBlock[i]] = (int) data.instance(paraBlock[i]).classValue();
 			} // Of for i
 			return;
-		}//of if
-		
+		} //of if
+
 		//Judge the first point
 		for (int i = 0; i < paraBlock.length; i++) {
-			if (instanceStatus[paraBlock[i]] != 0) {
-				tempFirstLabel = (int)data.instance(paraBlock[i]).classValue();
-				System.out.println("Can i look the classvalue :" + (int)data.instance(paraBlock[i]).classValue());
+			if (labels[paraBlock[i]] != -1) {
+				tempFirstLabel = (int) data.instance(paraBlock[i]).classValue();
 				tempFirstPoint = paraBlock[i];
 				break;
-			}else {
-				instanceStatus[paraInitialPoint] = 1;
-				labels[paraInitialPoint] = (int)data.instance(paraInitialPoint).classValue();
-				tempFirstLabel = (int)data.instance(paraInitialPoint).classValue();
+			} else {
+				System.out.println("-------------The paraBlock[paraInitialPoint] is :" + paraInitialPoint);
+				instanceStatus[paraInitialPoint] = 1; 
+				labels[paraInitialPoint] = (int) data.instance(paraInitialPoint).classValue();
+				tempFirstLabel = (int) data.instance(paraInitialPoint).classValue();
 				tempFirstPoint = paraInitialPoint;
-			}//of else
-		}//of for i
-		
+				break;
+			} //of else
+		} //of for i
+
 		System.out.println("(querySplitClassify) The first point is :" + tempFirstPoint);
 		// count the queried instance of the block.
 		int tempQueriedNum = 0;
-		System.out.println("(querySplitClassify)  The  instance states  leght is : " + paraBlock.length);
 		for (int i = 0; i < paraBlock.length; i++) {
 			// System.out.println("(querySplitClassify) for i is : " + i);
 			if (instanceStatus[paraBlock[i]] == 1) {
 				tempQueriedNum++;
 			} // of if
 		} // of for i
-		
-		System.out.println("(querySplitClassify) The block " + tempQueriedNum + " instance has been brought");
-		System.out.println("(querySplitClassify) The instancestate of block is :" + intArrayToString(instanceStatus));
-		System.out.println("(querySplitClassify) 2. The labels of block is :" + intArrayToString(labels));
+
 		// Step 1. Which instances have been queried in this block.
 		int[] tempQueried = new int[tempQueriedNum];
 		int tempIndex = -1;
@@ -203,13 +210,11 @@ public class RJ_CAKU004 {
 				tempQueried[tempIndex] = paraBlock[i];
 			} // of if
 		} // of for i
-		System.out.println("(querySplitClassify) The tempQueried array is : " + intArrayToString(tempQueried));
 
 		// Step 2. How many instances to query
 		// need to modify
 		int tempNumToBuy = numToBuy(paraBlock, tempFirstLabel);
-
-		System.out.println("(querySplitClassify) The " + tempNumToBuy + " instance need to buy");
+		System.out.println("---------(querySplitClassify) The " + tempNumToBuy + " instance need to buy");
 
 		// Step 3. Set the tag of the block state
 
@@ -224,7 +229,7 @@ public class RJ_CAKU004 {
 				tempQueried[tempIndex] = paraBlock[i];
 			} // of if
 		} // of for j
-		
+
 		int tempSecondCenter = -1;
 		System.out.println("(querySplitClassify) The quied array is : " + intArrayToString(tempQueried));
 		if (tempQueried.length > 1) {
@@ -232,73 +237,64 @@ public class RJ_CAKU004 {
 			for (int i = 1; i < tempQueried.length; i++) {
 				if (labels[tempQueried[0]] == labels[tempQueried[i]]) {
 					continue;
-				}else {
+				} else {
 					System.out.println("+++++++++++++++++++++++++++++(querySplitClassify) The quied array need split");
 					tempFirstPoint = tempQueried[0];
 					tempSecondCenter = tempQueried[i];
 					tempPure = false;
 					break;
-				}//of else
-			}//of for i
-		}else {
-			
-		
-		
+				} //of else
+			} //of for i
+		} else {
 
-		
-		// Step 4.1. Query other instances one by one and update the second center
-		
-		System.out.println("(querySplitClassify) Enter the buy one by one");
-		for (int i = 0; i < tempNumToBuy; i++) {
-			int tempFarthest = findFarthest(paraBlock, tempQueried);
-			System.out.println("(querySplitClassify) The farthest instance is " + tempFarthest);
-			// Query and update the states
-			//System.out.println("(querySplitClassify) Buy the  " + tempFarthest + " instance");
-			int tempCurrentLabel = (int) data.instance(tempFarthest).classValue();
-			//System.out.println("(querySplitClassify) The curren label is " + tempCurrentLabel);
-			labels[tempFarthest] = tempCurrentLabel;
-			instanceStatus[tempFarthest] = 1;
+			// Step 4.1. Query other instances one by one and update the second center
 
+			for (int i = 0; i < tempNumToBuy; i++) {
+				int tempFarthest = findFarthest(paraBlock, tempQueried);
+				System.out.println("(querySplitClassify) The farthest instance is " + tempFarthest);
+				// Query and update the states
+				int tempCurrentLabel = (int) data.instance(tempFarthest).classValue();
+				labels[tempFarthest] = tempCurrentLabel;
+				instanceStatus[tempFarthest] = 1;
 
-			if (tempCurrentLabel != tempFirstLabel) {
-				System.out.println("(querySplitClassify)  I need to quit and relearn");
-				tempPure = false;
-				tempSecondCenter = tempFarthest;
-				break;
-			}
-			
-			tempQueriedNum++;
-			// update the farthest point
-			tempQueried = new int[tempQueriedNum];
-			tempIndex = -1;
-			for (int j = 0; j < paraBlock.length; j++) {
-				if (instanceStatus[paraBlock[j]] == 1) {
-					++tempIndex;
-					tempQueried[tempIndex] = paraBlock[j];
+				if (tempCurrentLabel != tempFirstLabel) {
+					System.out.println("(querySplitClassify)  I need to quit and relearn");
+					tempPure = false;
+					tempSecondCenter = tempFarthest;
+					break;
+				}
+
+				tempQueriedNum++;
+				// update the farthest point
+				tempQueried = new int[tempQueriedNum];
+				tempIndex = -1;
+				for (int j = 0; j < paraBlock.length; j++) {
+					if (instanceStatus[paraBlock[j]] == 1) {
+						++tempIndex;
+						tempQueried[tempIndex] = paraBlock[j];
+					} // of if
+				} // of for j
+
+				System.out.println("(querySplitClassify) The tempQueried array after update is : "
+						+ intArrayToString(tempQueried));
+
+				tempFarthest = findFarthest(paraBlock, tempQueried);
+				System.out.println("(querySplitClassify) The tempCurrentLabel is " + tempCurrentLabel
+						+ "   and the tempFirstLael is : " + tempFirstLabel);
+
+				// An instance with different label is queried.
+				if (tempCurrentLabel != tempFirstLabel) {
+					tempSecondCenter = tempFarthest;
+					tempPure = false;
+					break;
 				} // of if
-			} // of for j
-			
-			System.out.println(
-					"(querySplitClassify) The tempQueried array after update is : " + intArrayToString(tempQueried));
-			System.out.println("(querySplitClassify) Refind the farthest instance.......");
 
-			tempFarthest = findFarthest(paraBlock, tempQueried);
-			System.out.println("(querySplitClassify) The tempCurrentLabel is " + tempCurrentLabel
-					+ "   and the tempFirstLael is : " + tempFirstLabel);
+			} // Of for i
 
-			// An instance with different label is queried.
-			if (tempCurrentLabel != tempFirstLabel) {
-				tempSecondCenter = tempFarthest;
-				tempPure = false;
-				break;
-			} // of if
-
-		} // Of for i
-		
-		}//of else
-		// Step 6. Now split and re-learn
+		} //of else
+			// Step 6. Now split and re-learn
 		if (!tempPure) {
-			
+
 			// make the two center to one array
 			// Initialize
 			System.out.println("(querySplitClassify) The block state is : " + tempPure);
@@ -307,21 +303,23 @@ public class RJ_CAKU004 {
 			tempCenterIndex[1] = tempSecondCenter;
 			System.out.println("(querySplitClassify) tempFirstCenter is " + tempCenterIndex[0]);
 			System.out.println("(querySplitClassify) tempSecondCenter is " + tempCenterIndex[1]);
+			
 			double[][] tempCenter = new double[2][data.numAttributes()];
 			tempCenter = indexToInstance(tempCenterIndex);
-			System.out.println("(querySplitClassify) tempCenter is : " + intArrayToString(tempCenterIndex));
+			
 			int[][] tempSplitted = new int[2][paraBlock.length];
 			System.out.println("(querySplitClassify) Getting splited ");
 			tempSplitted = cluster(paraBlock, tempCenter);
-			System.out.println("(quertempFirstPointySplitClassify) The cluster result  is : " + Arrays.deepToString(tempSplitted));
-			
+			System.out.println(
+					"(quertempFirstPointySplitClassify) The cluster result  is : " + Arrays.deepToString(tempSplitted));
+
 			System.out.println("(querySplitClassify) The Splitted1 initialPoint is: " + tempSplitted[0][0]);
 			System.out.println("(querySplitClassify) The Splitted2 initialPoint is: " + tempSplitted[1][0]);
 
 			querySplitClassify(tempSplitted[0], tempSplitted[0][0]);
 			querySplitClassify(tempSplitted[1], tempSplitted[1][0]);
 
-			} else {
+		} else {
 			System.out.println("(querySplitClassify) I am get into prediceted");
 			for (int i = 0; i < paraBlock.length; i++) {
 				if (instanceStatus[paraBlock[i]] == 0) {
@@ -330,15 +328,8 @@ public class RJ_CAKU004 {
 				} // of if
 			} // of for i
 
-			System.out.println("(querySplitClassify) The instance states after prediceted : " + intArrayToString(instanceStatus));
-			System.out.println("(querySplitClassify) 3.The labels after prediceted : " + intArrayToString(labels));
-			
 		} // of else
-		
-		System.out.println("+++++++++++++++++(querySplitClassify) The handle block is : " + intArrayToString(paraBlock));
-		System.out.println("(querySplitClassify) 4.The labels after process is " + intArrayToString(labels));
-		System.out.println("(querySplitClassify) The instanceStatus after process is " + intArrayToString(instanceStatus));
-		
+
 	}// Of querySplitClassify
 
 	/**
@@ -351,8 +342,6 @@ public class RJ_CAKU004 {
 	 */
 	// need to modify
 	public int[][] cluster(int[] paraBlock, double[][] paraCenters) {
-		System.out.println("(cluster) I am gei in cluster");
-		System.out.println("(cluster) The input center is : " + Arrays.deepToString(paraCenters));
 		// Step 1. Initialize
 		int paraK = 2;
 		int[][] tempCluster = new int[paraK][paraBlock.length];
@@ -367,15 +356,14 @@ public class RJ_CAKU004 {
 			tempCenters = tempNewCenters;
 			// Step 2.1 Cluster
 			for (int i = 0; i < paraBlock.length; i++) {
-				if (distance(paraBlock[i], tempCenters[0]) < distance(paraBlock[i], tempCenters[1])) {
+				if (distanceToCenter(paraBlock[i], tempCenters[0], DISTANCE) < distanceToCenter(paraBlock[i], tempCenters[1], DISTANCE)) {
 					tempCluster[0][tempKindSize[0]] = paraBlock[i];
-					tempKindSize[0]++; 
+					tempKindSize[0]++;
 				} else {
 					tempCluster[1][tempKindSize[1]] = paraBlock[i];
 					tempKindSize[1]++;
 				} // of else
 			} // Of for i
-			
 
 			// Step 2.2 Sum all in one kind
 			tempNewCenters = new double[paraK][data.numAttributes() - 1];
@@ -383,19 +371,18 @@ public class RJ_CAKU004 {
 				// Sum
 				for (int j = 0; j < tempKindSize[i]; j++) {
 					for (int k = 0; k < data.numAttributes() - 1; k++) {
-						tempNewCenters[i][k] += data.instance(tempCluster[i][j])
-								.value(k);
-					}// Of for k
-				}// Of for j
-			}//of for i
-			
+						tempNewCenters[i][k] += data.instance(tempCluster[i][j]).value(k);
+					} // Of for k
+				} // Of for j
+			} //of for i
+
 			// Step 2.3 Average Means conclude the new centers
 			for (int i = 0; i < paraK; i++) {
 				for (int j = 0; j < data.numAttributes() - 1; j++) {
 					tempNewCenters[i][j] /= tempKindSize[i];
 				} // Of for j
 			} // Of for i
-			
+
 		} // Of while
 		currentCenters = tempNewCenters;
 		// Step 3. Let the cluster into 2-d array divide by label 
@@ -404,11 +391,12 @@ public class RJ_CAKU004 {
 			resultCluster[i] = new int[tempKindSize[i]];
 			for (int j = 0; j < tempKindSize[i]; j++) {
 				resultCluster[i][j] = tempCluster[i][j];
-			}// Of for j
-		}// Of for i
+			} // Of for j
+		} // Of for i
 
-		System.out.println("(cluster) All the block number: " + paraBlock.length + "\r(cluster) The 1 cluster number is "
-				+ tempKindSize[0] + "\r(cluster) The 2 cluster number is " + tempKindSize[1]);
+		System.out
+				.println("(cluster) All the block number: " + paraBlock.length + "\r(cluster) The 1 cluster number is "
+						+ tempKindSize[0] + "\r(cluster) The 2 cluster number is " + tempKindSize[1]);
 		System.out.println("(cluster)The result cluster is " + Arrays.deepToString(resultCluster));
 		return resultCluster;
 	}// Of cluster
@@ -540,13 +528,12 @@ public class RJ_CAKU004 {
 					// System.out.println("(findFarthest) Break.......");
 					break;
 				} // Of if
-				tempDistanceSum += manhattanDistance(paraBlock[i], paraLabeledInstances[j]);
+				tempDistanceSum += distance(paraBlock[i], paraLabeledInstances[j],DISTANCE);
 				// System.out.println("(findFarthest)" + paraBlock[i] + " to labeled " +
 				// paraLabeledInstances[j] + " = " + manhattanDistance(paraBlock[i],
 				// paraLabeledInstances[j]));
 			} // Of for j
-				// System.out.println("(findFarthest) The sum distance is " + tempDistanceSum +
-				// " and the index is " + paraBlock[i]);
+			//System.out.println("(findFarthest) The sum distance is " + tempDistanceSum + " and the index is " + paraBlock[i]);
 				// Update
 			if (tempDistanceSum > tempMaxDistanceSum + 1e-6) {
 				resultFarthest = paraBlock[i];
@@ -557,25 +544,6 @@ public class RJ_CAKU004 {
 			// + " and the index is " + resultFarthest);
 		return resultFarthest;
 	}// Of findFarthest
-
-	/**
-	 ***********************************
-	 * Compute the Manhattan distance.
-	 * 
-	 * @param paraFirstIndex  the first instance index
-	 * @param paraSecondIndex the second instance index
-	 * @return the distance
-	 ************************************
-	 */
-	public double manhattanDistance(int paraFirstIndex, int paraSecondIndex) {
-		double tempResultDistance = 0;
-		for (int i = 0; i < data.numAttributes() - 1; i++) {
-			tempResultDistance += Math
-					.abs(data.instance(paraFirstIndex).value(i) - data.instance(paraSecondIndex).value(i));
-		} // Of for i
-
-		return tempResultDistance;
-	}// of mamhattanDistance
 
 	/**
 	 *****************************
@@ -646,17 +614,96 @@ public class RJ_CAKU004 {
 	}// Of testTotalCost
 
 	/**
+	 ******************* 
+	 * The distance between two instances.
+	 * @return The distance
+	 ******************* 
+	 */
+	public double distance(int paraFirstIndex, int paraSecondIndex, int paraDistanceMeasure) {
+		double resultDistance = 0;
+		distanceMeasure = paraDistanceMeasure;
+		switch (distanceMeasure) {
+		case MANHATTAN:
+			resultDistance = manhattanDistance(paraFirstIndex, paraSecondIndex);
+			break;
+		case EUCLIDEAN:
+			resultDistance = euclideanDistance(paraFirstIndex, paraSecondIndex);
+			break;
+		default:
+			System.out.println("#1 Invalid distance measure: " + distanceMeasure);
+			System.exit(0);
+		}// Of switch
+
+		return resultDistance;
+	}//Of distance
+
+	/**
 	 *****************************
 	 * Compute the distance between an object and an array
 	 *****************************
 	 */
-	public double distance(int paraIndex, double[] paraArray) {
+	public double distanceToCenter(int paraIndex, double[] paraArray ,int paraDistanceMeasure) {
 		double tempResultDistance = 0;
-		for (int i = 0; i < paraArray.length; i++) {
-			tempResultDistance += Math.abs(data.instance(paraIndex).value(i) - paraArray[i]);
-		} // Of for i
+		distanceMeasure = paraDistanceMeasure;
+		
+		switch (distanceMeasure) {
+		case MANHATTAN:
+			for (int i = 0; i < paraArray.length; i++) {
+				tempResultDistance += Math.abs(data.instance(paraIndex).value(i) - paraArray[i]);
+			} // Of for i
+			break;
+		case EUCLIDEAN:
+			for (int i = 0; i < paraArray.length; i++) {
+				tempResultDistance += Math.sqrt((data.instance(paraIndex).value(i) - paraArray[i]) * (data.instance(paraIndex).value(i) - paraArray[i]));
+			}//of for i
+			break;
+		default:
+			System.out.println("#2 Invalid distance measure: " + distanceMeasure);
+			System.exit(0);
+		}
 		return tempResultDistance;
 	}// Of distance
+
+	/**
+	 ******************* 
+	 * The distance between two instances.
+	 * 
+	 * @param paraK
+	 *            The value k.
+	 * @return The distance
+	 ******************* 
+	 */
+	public double manhattanDistance(int paraFirstIndex, int paraSecondIndex) {
+		double resultDistance = 0;
+
+		for (int i = 0; i < data.numAttributes() - 1; i++) {
+			resultDistance += Math
+					.abs(data.instance(paraFirstIndex).value(i) - data.instance(paraSecondIndex).value(i));
+		} // Of for i
+
+		return resultDistance;
+	}// Of manhattanDistance
+
+	/**
+	 ******************* 
+	 * The Euclidean distance between two instances.
+	 * 
+	 * @param paraK
+	 *            The value k.
+	 * @return The distance
+	 ******************* 
+	 */
+	public double euclideanDistance(int paraFirstIndex, int paraSecondIndex) {
+		double resultDistance = 0;
+		double tempValue;
+
+		for (int i = 0; i < data.numAttributes() - 1; i++) {
+			tempValue = data.instance(paraFirstIndex).value(i) - data.instance(paraSecondIndex).value(i);
+			resultDistance += tempValue * tempValue;
+		} // Of for i
+
+		return resultDistance;
+	}// Of euclideanDistance
 
 	/**
 	 *****************************
@@ -815,7 +862,7 @@ public class RJ_CAKU004 {
 			for (int i = 0; i < tempBlockSize; i++) {
 				tempLeastDistance = Double.MAX_VALUE;
 				for (int j = 0; j < paraK; j++) {
-					double tempDistance = distance(paraBlock[i], tempCenters[j]);
+					double tempDistance = distanceToCenter(paraBlock[i], tempCenters[j], DISTANCE);
 					System.out.println("(clusterTest)The " + i + " distance to instance[" + j + "] is " + tempDistance);
 					if (tempDistance < tempLeastDistance) {
 						System.out.println("(clusterTest)The instance[" + i + "] is blong to " + j);
@@ -863,7 +910,7 @@ public class RJ_CAKU004 {
 		} // Of while
 		return tempCluster;
 	}// Of cluster
-	
+
 	/**
 	 ***********************************
 	 * The class value test
@@ -875,8 +922,8 @@ public class RJ_CAKU004 {
 		String dataTrace = "data/easyiris.arff";
 		RJ_CAKU004 caku = new RJ_CAKU004(dataTrace, tempMisclassificationCost, tempTeachCost);
 		for (int i = 0; i < caku.data.numInstances(); i++) {
-			System.out.println("The " + i + " instance classValue is: " + caku.data.instance(i).classValue() );
-		}//of for i
+			System.out.println("The " + i + " instance classValue is: " + caku.data.instance(i).classValue());
+		} //of for i
 	}// of testClassValue
-	
+
 }// of RJ_CAKU003

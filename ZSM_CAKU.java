@@ -201,7 +201,7 @@ public class ZSM_CAKU {
 		if (IndexOfFirstLabel != -1) {
 			pointIndex.add(IndexOfFirstLabel);
 			for(int i=IndexOfFirstLabel+1;i<blockSize;i++) {
-				if(labels[paraBlock[i]]==1) {
+				if(instanceStates[paraBlock[i]]==1) {
 					pointIndex.add(i);
 				}
 			}
@@ -396,7 +396,7 @@ public class ZSM_CAKU {
 			for (int j = 0; j < listSize; j++) {
 				tempDistance += computeDistance(paraBlock[centerPoints.get(j)], paraBlock[i]);
 			} // Of for j
-			if ((tempDistance > tempMaxDistance) && (!isFinded[i])) {
+			if ((tempDistance > tempMaxDistance + 1e-6 ) && (!isFinded[i])) {
 				tempIndexOfMaxPoint = i;
 				tempMaxDistance = tempDistance;
 			} // Of for i
